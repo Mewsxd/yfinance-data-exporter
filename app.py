@@ -2,6 +2,7 @@ from flask import Flask, request, send_file, jsonify, Response
 from flask_cors import CORS
 
 from util.get_indicator_data import get_indicator_data
+from util.get_intraday_indicator_data import get_intraday_indicator_data
 import io
 
 app = Flask(__name__)
@@ -22,7 +23,10 @@ def get_data():
     if not symbol or not interval or not period:
         return {"error": "Missing query parameters"}, 400
 
-    indicator_data = get_indicator_data(symbol, interval, period)
+    if period == '2hr':
+        indicator_data = get_intraday_indicator_data(symbol, interval)
+    else:
+        indicator_data = get_indicator_data(symbol, interval, period)
     # print(indicator_data)
     if indicator_data is None:
         return jsonify({"error": "Invalid or unsupported symbol"}), 400

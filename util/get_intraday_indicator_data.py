@@ -1,3 +1,5 @@
+import re
+
 import pandas as pd
 import yfinance as yf
 from ta.momentum import RSIIndicator
@@ -5,17 +7,13 @@ from ta.trend import MACD
 from util.get_start_date_of_symbol import get_start_date_of_symbol
 
 
-def get_indicator_data(symbol, interval, period):
+def get_intraday_indicator_data(symbol, interval):
+    print("Executing get_intraday_indicator_data function")
     # Fetch historical data for TSLA from its inception (2010-06-29)
     # Intraday time intervals (minutes) are only avaialble when period is less than or equal to a month,
     # use day for more than a month
 
-    if period == "max":
-        start_date = get_start_date_of_symbol(symbol)
-        print("Start date here", start_date)
-        data = yf.download(symbol, interval=interval, start=start_date)  # You can adjust the start date
-    else:
-        data = yf.download(symbol, interval=interval, period=period)
+    data = yf.download(symbol, interval=interval, period='5d')
 
     # If no data is returned, symbol is invalid
     if data.empty:
@@ -45,8 +43,10 @@ def get_indicator_data(symbol, interval, period):
     # data = data.drop([1, 2])
     # Drop the second and third rows by position
     # data = data.iloc[[i for i in range(len(data)) if i not in [1, 2]]]
-    data = data.iloc[[0] + list(range(3, len(data)))]  # Keep the first row and all rows from the fourth onward
-
+    # data = data.iloc[[0] + list(range(3, len(data)))]  # Keep the first row and all rows from the fourth onward
+    interval_number = int(re.findall(r'\d+', interval)[0])
+    number_of_rows = (2 * 60)/interval_number
+    data = data.tail(int(number_of_rows))
     # Return the modified DataFrame
     return data[['Close', 'RSI', 'MACD', 'MACD_signal', 'MACD_histogram']]
     # data[['Close', 'RSI', 'MACD', 'MACD_signal', 'MACD_histogram']].to_excel("TSLA_RSI_MACD_ALL_TIME_4.xlsx",
